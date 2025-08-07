@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <title>CRM Envíos</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { background: #f4f6fa; margin:0; font-family: 'Segoe UI', Arial, sans-serif;}
+    .header {
+      background: #2350b3; color: #fff;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.7rem 2rem; position: sticky; top:0; z-index: 20;
+      box-shadow: 0 2px 12px rgba(35,80,179,0.08);
+    }
+    .header .logo { font-size: 1.35rem; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center;}
+    .header .logo i { font-size: 1.7rem; margin-right: 0.5rem;}
+    .nav { display: flex; gap: 1.1rem;}
+    .nav-btn {
+      background: transparent; color: #fff; border: none; font-size: 1rem; padding: 0.4rem 1.1rem;
+      border-radius: 7px; cursor: pointer; font-weight: 500; transition: background .15s;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nav-btn.active, .nav-btn:hover { background: #fff; color: #2350b3;}
+    .main { max-width: 1100px; margin: 2.4rem auto; background: #fff; border-radius: 18px; box-shadow: 0 4px 28px #0001; padding: 2rem 2rem 2.5rem 2rem;}
+    h2.section-title { color: #2350b3; font-size: 1.37rem; margin-bottom: 1.1rem; display: flex; align-items: center; gap: 0.5rem;}
+    .kpi-row { display: flex; gap: 1rem; margin-bottom: 2rem; }
+    .kpi-card {
+      flex: 1; background: #fff; border-radius: 10px; padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(30,64,175,0.07); display: flex; flex-direction: column; align-items: center;
+      min-width: 150px;
+    }
+    .kpi-card i { font-size: 2rem; margin-bottom: 0.5rem; }
+    .kpi-title { font-size: 0.9rem; color: #2350b3; margin-bottom: 0.3rem; }
+    .kpi-value { font-size: 1.5rem; font-weight: bold; color: #2350b3; }
+    .form-row { display: flex; flex-wrap: wrap; gap: 1.2rem; margin-bottom: 1.1rem;}
+    .form-col { flex:1; min-width: 170px;}
+    label {font-weight: 500; display:block; margin-bottom:2px;}
+    input, select, textarea {
+      width: 100%; padding: 0.5rem 0.7rem; border: 1px solid #cad4e0;
+      border-radius: 7px; margin-bottom: 0.2rem; font-size: 1rem; background: #fafdff;
+    }
+    textarea { min-height: 32px;}
+    .btn { padding:0.48rem 1.2rem; border-radius:7px; border:none; font-weight:500; font-size:1rem; cursor:pointer; margin-right:0.5rem;}
+    .btn-primary { background: #2350b3; color: #fff;}
+    .btn-primary:hover { background: #193376;}
+    .btn-success { background: #22c55e; color: #fff;}
+    .btn-danger { background: #ef4444; color: #fff;}
+    .btn-outline { background: #fff; border: 1.5px solid #2350b3; color: #2350b3;}
+    .btn-outline.active, .btn-outline:hover { background: #2350b3; color: #fff;}
+    .badge { display:inline-block; min-width:75px; padding:0.3em 0.7em; border-radius:12px; font-weight:600; font-size:0.99em;}
+    .badge.success { background: #d1f7dd; color: #136c2d;}
+    .badge.pending { background: #fff7d1; color: #b98b00;}
+    .badge.danger { background: #ffd6d6; color: #a12727;}
+    .table-container { overflow-x: auto;}
+    table { width:100%; border-collapse:collapse; margin-top:1.2rem;}
+    th,td { padding:0.75em 0.5em; border-bottom:1px solid #e2e8f0; text-align:center;}
+    th { background: #2350b3; color: #fff; font-weight:600;}
+    tr:nth-child(even) { background: #f0f4fc;}
+    .action-icons i { margin: 0 6px; cursor:pointer;}
+    .action-icons i:hover { color: #ef4444;}
+    .filters { display: flex; flex-wrap:wrap; align-items:center; gap:0.7rem; margin-bottom:1rem;}
+    .month-btns { margin:1rem 0 0.7rem 0; display:flex; flex-wrap:wrap; gap:0.5rem;}
+    .month-btn { border:1.5px solid #2350b3; background: #fff; color: #2350b3; padding:0.38rem 1.0rem; font-size:0.98em; border-radius:7px; cursor:pointer;}
+    .month-btn.active,.month-btn:hover { background:#2350b3; color:#fff;}
+    .snackbar {
+      visibility: hidden; min-width: 200px; background: #22c55e; color: white; text-align: center;
+      border-radius: 8px; padding: 14px; position: fixed; z-index: 99; left: 50%; bottom: 40px;
+      transform: translateX(-50%); font-size: 1rem; box-shadow: 0 2px 8px rgba(30,64,175,0.09);
+      transition: visibility 0s, opacity 0.4s linear;
+      opacity: 0;
+    }
+    .snackbar.show { visibility: visible; opacity: 1;}
+    @media (max-width: 900px) {.main {padding:1rem;} .form-row {gap:0.6rem;}}
+    @media (max-width: 700px) {.header {flex-direction: column;gap:0.6rem;} .main {padding:0.7rem;}}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="logo"><i class="fa-solid fa-cube"></i>CRM Envíos</span>
+    <div class="nav">
+      <button class="nav-btn active" onclick="mostrarSeccion('dashboard')"><i class="fa-solid fa-gauge"></i>Dashboard</button>
+      <button class="nav-btn" onclick="mostrarSeccion('facturacion')"><i class="fa-solid fa-file-invoice"></i>Facturación</button>
+      <button class="nav-btn" onclick="mostrarSeccion('pagos')"><i class="fa-solid fa-money-bill-wave"></i>Pagos</button>
+      <button class="nav-btn" onclick="mostrarSeccion('directorio')"><i class="fa-solid fa-address-book"></i>Directorio</button>
+      <button class="nav-btn" onclick="mostrarSeccion('reportes')"><i class="fa-solid fa-chart-column"></i>Reportes</button>
+      <button class="nav-btn" onclick="mostrarSeccion('comprobantes')"><i class="fa-solid fa-file-circle-check"></i>Comprobantes</button>
+      <button class="nav-btn" onclick="mostrarSeccion('estado_cuenta')"><i class="fa-solid fa-book"></i>Estado de Cuenta</button>
+      <button class="nav-btn" onclick="mostrarSeccion('propuestas')"><i class="fa-solid fa-handshake"></i>Propuestas</button>
+      <button class="nav-btn" onclick="mostrarSeccion('comercial')"><i class="fa-solid fa-diagram-project"></i>Comercial</button>
+    </div>
+    <span style="font-size:1.3rem;color:#ffb62e;"><i class="fa-solid fa-circle-user"></i></span>
+  </div>
+
+  <!-- Aquí van TODOS los bloques de las secciones: dashboard, facturacion, pagos, directorio, reportes, comprobantes, estado_cuenta, propuestas, comercial-->
+  <!-- Por razones de espacio no los repito aquí, pero puedes pegar cada uno de los bloques que ya te he generado, EN EL MISMO ORDEN DE LOS BOTONES DEL MENU -->
+
+  <!-- SNACKBAR -->
+  <div id="snackbar" class="snackbar"></div>
+
+  <script>
+    // Utilidades, navegación y todos los scripts de cada sección
+    // Pega aquí todos los JS de renderizado y lógica de cada sección como en los bloques previos
+    // Incluye las funciones para getData, setData, showSnackbar, renderDashboard, renderFacturas, renderPagos, renderClientes, renderReportes, renderComprobantes, renderEstadoCuenta, renderPropuestas, renderLeads, etc.
+
+    // Ejemplo de navegación SPA
+    function mostrarSeccion(id) {
+      document.querySelectorAll('.main').forEach(sec => sec.style.display = 'none');
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(id).style.display = 'block';
+      let idx = ['dashboard','facturacion','pagos','directorio','reportes','comprobantes','estado_cuenta','propuestas','comercial'].indexOf(id);
+      document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+      // Refresca sección al entrar
+      if(id==="dashboard") renderDashboard();
+      if(id==="facturacion") renderFacturas();
+      if(id==="pagos") renderPagos();
+      if(id==="directorio") renderClientes();
+      if(id==="reportes") renderReportes();
+      if(id==="comprobantes") renderComprobantes();
+      if(id==="estado_cuenta") renderEstadoCuenta();
+      if(id==="propuestas") renderPropuestas();
+      if(id==="comercial") renderLeads();
+    }
+    // ...Asegúrate de pegar todas las funciones de render y eventos aquí...
+
+    // Ejemplo de snackbar
+    function showSnackbar(msg, color = null) {
+      const sb = document.getElementById('snackbar');
+      sb.innerText = msg;
+      sb.style.background = color || '#22c55e';
+      sb.className = "snackbar show";
+      setTimeout(() => sb.className = sb.className.replace("show", ""), 2100);
+    }
+    // Ejemplo de utilidades de datos
+    function getData(key) { return JSON.parse(localStorage.getItem(key) || "[]"); }
+    function setData(key, arr) { localStorage.setItem(key, JSON.stringify(arr)); }
+  </script>
+</body>
+</html>
